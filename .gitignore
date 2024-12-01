@@ -1,0 +1,23 @@
+# Python specific
+*.pyc
+__pycache__/
+venv/
+.env
+/.vscode
+
+# Editor specific
+.vscode/
+
+# Environment specific
+.env
+
+# Compiled files
+*.pyc
+*.pyo
+*.pyd
+
+# Dependencies
+/.venv
+
+# Advent of Code session file
+.session
