@@ -6,7 +6,7 @@ on:
       day:
         description: "Advent of Code Day (e.g., 1 for Day 1)"
         required: true
-        default: "1"
+        default: "1"  # Ensure it's a string lol
 
 jobs:
   validate-solution:
@@ -28,16 +28,22 @@ jobs:
 
     - name: Run Solution and Validate
       run: |
-        # Format the day as dayXX
+        # Format the day as dayX (handle single digit day formatting)
         day=$(printf "%02d" ${{ github.event.inputs.day }})
         cd "day${day}" || exit 1
 
         # Load session token
         session=$(cat ../.session)
 
+        # Check if the Python solution file exists
+        if [[ ! -f "day${day}.py" ]]; then
+          echo "Error: day${day}.py not found!"
+          exit 1
+        fi
+
         # Run the solution for Part 1
         echo "Running solution for Day ${day}, Part 1"
-        part1=$(python day${day}.py input.txt | grep "Part 1:" | awk '{print $3}')
+        part1=$(python "day${day}.py" input.txt | grep "Part 1:" | awk '{print $3}')
         if [[ -z "$part1" ]]; then
           echo "Error: Part 1 output is empty or not in the expected format."
           exit 1
@@ -58,7 +64,7 @@ jobs:
 
         # Run the solution for Part 2
         echo "Running solution for Day ${day}, Part 2"
-        part2=$(python day${day}.py input.txt | grep "Part 2:" | awk '{print $3}')
+        part2=$(python "day${day}.py" input.txt | grep "Part 2:" | awk '{print $3}')
         if [[ -z "$part2" ]]; then
           echo "Error: Part 2 output is empty or not in the expected format."
           exit 1
