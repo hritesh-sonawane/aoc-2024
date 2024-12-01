@@ -1,0 +1,78 @@
+name: Advent of Code - Solution Validation
+
+on:
+  workflow_dispatch:
+    inputs:
+      day:
+        description: "Advent of Code Day (e.g., 1 for Day 1)"
+        required: true
+        default: "1"
+
+jobs:
+  validate-solution:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Use Session Token
+      run: echo "$AOC_SESSION" > .session
+      env:
+        AOC_SESSION: ${{ secrets.AOC_SESSION }}
+
+    - name: Run Solution and Validate
+      run: |
+        # Format the day as dayXX
+        day=$(printf "%02d" ${{ github.event.inputs.day }})
+        cd "day${day}" || exit 1
+
+        # Load session token
+        session=$(cat ../.session)
+
+        # Run the solution for Part 1
+        echo "Running solution for Day ${day}, Part 1"
+        part1=$(python day${day}.py input.txt | grep "Part 1:" | awk '{print $3}')
+        if [[ -z "$part1" ]]; then
+          echo "Error: Part 1 output is empty or not in the expected format."
+          exit 1
+        fi
+
+        # Submit Part 1
+        response1=$(curl -s -X POST "https://adventofcode.com/2024/day/${day#0}/answer" \
+          --cookie "session=${session}" \
+          -d "level=1" \
+          -d "answer=${part1}")
+        if echo "$response1" | grep -q "That's the right answer!"; then
+          echo "Part 1: Correct!"
+        elif echo "$response1" | grep -q "That's not the right answer"; then
+          echo "Part 1: Incorrect!"
+        else
+          echo "Part 1: Unknown response, check manually."
+        fi
+
+        # Run the solution for Part 2
+        echo "Running solution for Day ${day}, Part 2"
+        part2=$(python day${day}.py input.txt | grep "Part 2:" | awk '{print $3}')
+        if [[ -z "$part2" ]]; then
+          echo "Error: Part 2 output is empty or not in the expected format."
+          exit 1
+        fi
+
+        # Submit Part 2
+        response2=$(curl -s -X POST "https://adventofcode.com/2024/day/${day#0}/answer" \
+          --cookie "session=${session}" \
+          -d "level=2" \
+          -d "answer=${part2}")
+        if echo "$response2" | grep -q "That's the right answer!"; then
+          echo "Part 2: Correct!"
+        elif echo "$response2" | grep -q "That's not the right answer"; then
+          echo "Part 2: Incorrect!"
+        else
+          echo "Part 2: Unknown response, check manually."
+        fi
